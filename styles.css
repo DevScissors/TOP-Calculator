@@ -1,0 +1,9 @@
+.calculator-wrapper {
+    border: 1px solid red;
+    height: 400px;
+    width: 200px;
+}
+
+.btn {
+    border-radius: 10px;
+}
