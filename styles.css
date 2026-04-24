@@ -5,7 +5,7 @@
 }
 
 .calculator-container {
-    border: 3px solid gray;
+    border: 5px solid gray;
     height: 600px;
     width: 300px;
     border-radius: 30px;
@@ -14,11 +14,11 @@
 
 .results-input-container {
     height: 230px;
+    width: 300px;
     padding-bottom: 20px;
 }
 
 .results-input {
-    height: 35%;
     width: 280px;
     border: none;
     color: white;
@@ -26,6 +26,18 @@
     font-size: 36px;
     text-align: right;
     margin-top: 50%;
+}
+
+input {
+    text-indent: 20px;
+}
+
+input::placeholder {
+    color: white;
+}
+
+input:focus-visible {
+    outline: none;
 }
 
 .buttons-wrapper {

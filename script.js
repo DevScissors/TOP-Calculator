@@ -28,10 +28,40 @@ function clearButtonToggle(displayValue) {
 
 clearButtonToggle(false);
 
-// function generateButtons() {
-//     const calcDiv = document.querySelector(".calculator-container");
-//     const operatorButton = document.createElement("button");
-//     operatorButton.textContent = "+";
-//     console.log(calcDiv);
-//     calcDiv.appendChild(operatorButton);
-// }
+const operatorButtons = document.querySelectorAll(".operator");
+
+operatorButtons.forEach((button) => {
+    button.addEventListener("mousedown", () => {
+        button.style.filter = "brightness(1.2)";
+    })
+    button.addEventListener("mouseup", () => {
+        button.style.filter = "";
+    })
+})
+
+const numberButtons = document.querySelectorAll(".number");
+
+numberButtons.forEach((button) => {
+    button.addEventListener("mousedown", () => {
+        button.style.filter = "brightness(3)";
+    })
+    button.addEventListener("mouseup", () => {
+        button.style.filter = "";
+    })
+})
+
+const miscButtons = document.querySelectorAll(".misc");
+
+miscButtons.forEach((button) => {
+    button.addEventListener("mousedown", () => {
+        button.style.filter = "brightness(1.5)";
+    })
+    button.addEventListener("mouseup", () => {
+        button.style.filter = "";
+    })
+})
+
+
+const inputDisplay = document.querySelector(".results-input");
+
+inputDisplay.value = "";
