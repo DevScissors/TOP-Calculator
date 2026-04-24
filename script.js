@@ -1,32 +1,110 @@
-const add = (num1, num2) => num1 + num2;
-const subtract = (num1, num2) => num1 - num2;
-const multiply = (num1, num2) => num1 * num2;
-const divide = (num1, num2) => num1 / num2;
-
-function operate(operator, num1, num2) {
+function getOperator(operator) {
     switch (operator) {
-        case "add": add(num1, num2)
-        case "subtract": subtract(num1, num2)
-        case "multiply": multiply(num1, num2)
-        case "divide": divide(num1, num2)
+        case "+":
+            operator = "+";
+            break;
+        case "-":
+            operator = "-";
+            break;
+        case "x":
+            operator = "x";
+            break;
+        case "/":
+            operator = "/";
+            break;
+        case "%":
+            operator = "%";
+            break;
         default:
-            add(num1, num2);
+            operator = '';
     }
+    return operator;
 }
 
-function clearButtonToggle(displayValue) {
-    const clearButton = document.querySelector(".clear");
-    console.log(clearButton);
+let currentOperator = '';
+
+const equalsButton = document.querySelector(".operator-equals");
+const expressionDisplay = document.querySelector(".expression-display");
+expressionDisplay.textContent = '';
+
+equalsButton.addEventListener("click", () => {
+    expressionDisplay.textContent = inputDisplay.value;
+    clearButtonImageToggle();
+    getTotal(currentOperator);
+})
+
+function getTotal() {
+
+    const expression = inputDisplay.value;
+    const parts = expression.split(currentOperator);
+    if (currentOperator === "x") {
+        currentOperator = "*";
+    }
+    const result = new Function(`return ${parts[0]} ${currentOperator} ${parts[1]}`)();
+    inputDisplay.value = result;
+}
+
+let firstNum = 0;
+
+const inputDisplay = document.querySelector(".results-input");
+if (inputDisplay.value !== "") {
+    firstNum = inputDisplay.value;
+}
+
+const clearButton = document.querySelector(".clear");
+
+let timer;
+const longPress = 800;
+clearButton.addEventListener("click", () => {
+    if (expressionDisplay.textContent != "") {
+        inputDisplay.value = '';
+        expressionDisplay.textContent = '';
+    }
+})
+clearButton.addEventListener("mousedown", () => {
+    timer = setTimeout(() => {
+        inputDisplay.value = '';
+        expressionDisplay.textContent = '';
+        clearButton.textContent = "AC";
+        clearButtonImageToggle();
+    }, longPress)
+})
+
+clearButton.addEventListener("mouseup", () => {
+    clearTimeout(timer);
+    if (inputDisplay.value !== '') {
+        deleteDigit();
+        clearButtonImageToggle();
+    }
+})
+
+clearButton.addEventListener("mouseout", () => {
+    clearTimeout(timer);
+})
+
+
+
+function clearButtonImageToggle() {
     const deleteLeftIcon = document.createElement("img");
+    deleteLeftIcon.style.paddingTop = "5px";
+    deleteLeftIcon.style.paddingRight = "5px";
     deleteLeftIcon.src = "./images/delete-left-icon.png";
-    if (!displayValue) {
-        return clearButton.textContent = "AC";
+    if (inputDisplay.value == "" || expressionDisplay.textContent != "") {
+        clearButton.textContent = "AC";
+        if (clearButton.contains(deleteLeftIcon)) {
+            clearButton.removeChild(deleteLeftIcon);
+        }
     } else {
+        clearButton.textContent = "";
         return clearButton.appendChild(deleteLeftIcon);
     }
 }
 
-clearButtonToggle(false);
+function deleteDigit() {
+    if (inputDisplay.value != "" && expressionDisplay.textContent == '') {
+        inputDisplay.value = inputDisplay.value.slice(0, -1);
+    }
+}
 
 const operatorButtons = document.querySelectorAll(".operator");
 
@@ -36,6 +114,15 @@ operatorButtons.forEach((button) => {
     })
     button.addEventListener("mouseup", () => {
         button.style.filter = "";
+    })
+    button.addEventListener("click", () => {
+        currentOperator = getOperator(button.value);
+        if (inputDisplay.value === '') {
+            inputDisplay.value = firstNum += currentOperator;
+        } else {
+            inputDisplay.value = inputDisplay.value += currentOperator;
+        }
+
     })
 })
 
@@ -47,6 +134,10 @@ numberButtons.forEach((button) => {
     })
     button.addEventListener("mouseup", () => {
         button.style.filter = "";
+    })
+    button.addEventListener("click", () => {
+        inputDisplay.value += button.value;
+        clearButtonImageToggle();
     })
 })
 
@@ -61,7 +152,6 @@ miscButtons.forEach((button) => {
     })
 })
 
+clearButtonImageToggle();
 
-const inputDisplay = document.querySelector(".results-input");
 
-inputDisplay.value = "";
