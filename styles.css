@@ -1,9 +1,67 @@
 .calculator-wrapper {
-    border: 1px solid red;
-    height: 400px;
-    width: 200px;
+    display: flex;
+    justify-content: center;
+    margin-top: 20%;
+}
+
+.calculator-container {
+    border: 3px solid gray;
+    height: 600px;
+    width: 300px;
+    border-radius: 30px;
+    background-color: black;
+}
+
+.results-input-container {
+    height: 230px;
+    padding-bottom: 20px;
+}
+
+.results-input {
+    height: 35%;
+    width: 280px;
+    border: none;
+    color: white;
+    background-color: black;
+    font-size: 36px;
+    text-align: right;
+    margin-top: 50%;
+}
+
+.buttons-wrapper {
+    position: relative;
+    top: -20px;
+}
+
+.buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 10px;
+    gap: 10px;
+    justify-content: center;
+}
+
+.operator {
+    background-color: orange;
+}
+
+.number,
+.calc-icon,
+.decimal-point {
+    background-color: #222;
+}
+
+.positive-negative,
+.percentage,
+.clear {
+    background-color: #636363;
 }
 
 .btn {
-    border-radius: 10px;
+    border-radius: 50%;
+    height: 60px;
+    width: 60px;
+    color: white;
+    border: none;
+    font-size: 20px;
 }
