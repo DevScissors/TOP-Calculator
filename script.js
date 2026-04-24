@@ -10,10 +10,7 @@ function getOperator(operator) {
             operator = "x";
             break;
         case "/":
-            operator = "/";
-            break;
-        case "%":
-            operator = "%";
+            operator = "\u00F7"
             break;
         default:
             operator = '';
@@ -34,13 +31,25 @@ equalsButton.addEventListener("click", () => {
 })
 
 function getTotal() {
-
-    const expression = inputDisplay.value;
+    let result = null;
+    let expression = inputDisplay.value;
+    if (expression.includes("%")) {
+        expression = expression.replace("%", "");
+    }
     const parts = expression.split(currentOperator);
     if (currentOperator === "x") {
         currentOperator = "*";
     }
-    const result = new Function(`return ${parts[0]} ${currentOperator} ${parts[1]}`)();
+    if (currentOperator === "\u00F7") {
+        currentOperator = "/";
+    }
+    if (currentOperator === "") {
+        result = inputDisplay.value;
+    }
+    if (currentOperator === "%") {
+        return result = new Function(`return ${parts[0]} ${currentOperator} ${parts[1]}`)() / 100;
+    }
+    result = new Function(`return ${parts[0]} ${currentOperator} ${parts[1]}`)();
     inputDisplay.value = result;
 }
 
@@ -59,6 +68,7 @@ clearButton.addEventListener("click", () => {
     if (expressionDisplay.textContent != "") {
         inputDisplay.value = '';
         expressionDisplay.textContent = '';
+        decimalPointButton.disabled = false;
     }
 })
 clearButton.addEventListener("mousedown", () => {
@@ -141,6 +151,24 @@ numberButtons.forEach((button) => {
     })
 })
 
+const decimalPointButton = document.querySelector(".decimal-point");
+
+decimalPointButton.addEventListener("click", () => {
+    if (inputDisplay.value === '') {
+        decimalPointButton.disabled = false;
+    } else if (inputDisplay.value.includes(".")) {
+        decimalPointButton.disabled = true;
+    } else {
+        inputDisplay.value += decimalPointButton.value;
+    }
+})
+
+const percentageButton = document.querySelector(".percentage");
+
+percentageButton.addEventListener("click", () => {
+    inputDisplay.value = inputDisplay.value += percentageButton.value;
+})
+
 const miscButtons = document.querySelectorAll(".misc");
 
 miscButtons.forEach((button) => {
@@ -150,6 +178,16 @@ miscButtons.forEach((button) => {
     button.addEventListener("mouseup", () => {
         button.style.filter = "";
     })
+})
+
+const positiveNegButton = document.querySelector(".positive-negative");
+
+positiveNegButton.addEventListener("click", () => {
+    if (inputDisplay.value.includes("-(")) {
+        inputDisplay.value = inputDisplay.value.replace(/[()-]/g, "");
+    } else if (inputDisplay.value != '') {
+        inputDisplay.value = `-(${inputDisplay.value})`;
+    }
 })
 
 clearButtonImageToggle();
