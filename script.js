@@ -25,32 +25,53 @@ const expressionDisplay = document.querySelector(".expression-display");
 expressionDisplay.textContent = '';
 
 equalsButton.addEventListener("click", () => {
-    expressionDisplay.textContent = inputDisplay.value;
+    if (currentOperator) {
+        expressionDisplay.textContent = inputDisplay.value;
+    }
     clearButtonImageToggle();
     getTotal(currentOperator);
+    currentOperator = '';
 })
 
 function getTotal() {
     let result = null;
     let expression = inputDisplay.value;
-    if (expression.includes("%")) {
-        expression = expression.replace("%", "");
+    let parts = null;
+    if (expression.includes("%") && currentOperator) {
+        parts = expression.split(currentOperator);
+        if (parts[0].includes("%")) {
+            parts[0] = parts[0].replace("%", "");
+            result = new Function(`return ${parts[0] / 100} ${currentOperator} ${parts[1]}`)();
+            return inputDisplay.value = result;
+        } else {
+            parts[1] = parts[1].replace("%", "");
+            result = new Function(`return ${parts[0]} * (${parts[1]}/100) ${currentOperator} ${parts[0]}`)();
+            return inputDisplay.value = result;
+        }
     }
-    const parts = expression.split(currentOperator);
+    if (expression.includes("%") && currentOperator == '') {
+        expression = expression.replace("%", "");
+        result = new Function(`return ${expression}/100`)();
+        inputDisplay.value = result;
+    }
+    if (inputDisplay.value.includes("(-") && !currentOperator) {
+        return;
+    }
+    parts = expression.split(currentOperator);
     if (currentOperator === "x") {
         currentOperator = "*";
-    }
-    if (currentOperator === "\u00F7") {
+        result = new Function(`return ${parts[0]} ${currentOperator} ${parts[1]}`)();
+        inputDisplay.value = result;
+    } else if (currentOperator === "\u00F7") {
         currentOperator = "/";
-    }
-    if (currentOperator === "") {
+        result = new Function(`return ${parts[0]} ${currentOperator} ${parts[1]}`)();
+        inputDisplay.value = result;
+    } else if (currentOperator === "") {
         result = inputDisplay.value;
+    } else {
+        result = new Function(`return ${parts[0]} ${currentOperator} ${parts[1]}`)();
+        inputDisplay.value = result;
     }
-    if (currentOperator === "%") {
-        return result = new Function(`return ${parts[0]} ${currentOperator} ${parts[1]}`)() / 100;
-    }
-    result = new Function(`return ${parts[0]} ${currentOperator} ${parts[1]}`)();
-    inputDisplay.value = result;
 }
 
 let firstNum = 0;
@@ -128,9 +149,13 @@ operatorButtons.forEach((button) => {
     button.addEventListener("click", () => {
         currentOperator = getOperator(button.value);
         if (inputDisplay.value === '') {
-            inputDisplay.value = firstNum += currentOperator;
+            inputDisplay.value = firstNum + currentOperator;
+        } else if (!currentOperator) {
+            inputDisplay.value = inputDisplay.value + currentOperator;
+        } else if (/([+\-\x]|\u00F7)$/.test(inputDisplay.value)) {
+            inputDisplay.value = inputDisplay.value.slice(0, -1) + currentOperator;
         } else {
-            inputDisplay.value = inputDisplay.value += currentOperator;
+            inputDisplay.value = inputDisplay.value + currentOperator;
         }
 
     })
@@ -183,10 +208,31 @@ miscButtons.forEach((button) => {
 const positiveNegButton = document.querySelector(".positive-negative");
 
 positiveNegButton.addEventListener("click", () => {
-    if (inputDisplay.value.includes("-(")) {
-        inputDisplay.value = inputDisplay.value.replace(/[()-]/g, "");
-    } else if (inputDisplay.value != '') {
-        inputDisplay.value = `-(${inputDisplay.value})`;
+    const regexPosNeg = /[()-]/g
+
+    if (inputDisplay.value.charAt(0) === "-") {
+        expressionDisplay.textContent = '';
+        inputDisplay.value = inputDisplay.value.replace("-", "");
+    }
+    else if (!inputDisplay.value.includes("(-") && !currentOperator) {
+        expressionDisplay.textContent = '';
+        inputDisplay.value = `(-${inputDisplay.value})`;
+    } else if (inputDisplay.value.includes("(-") && !currentOperator) {
+        expressionDisplay.textContent = '';
+        inputDisplay.value = inputDisplay.value.replace(regexPosNeg, "");
+    } else if (inputDisplay.value != '' && currentOperator != "-") {
+        let expression = inputDisplay.value;
+        let expressionParts = expression.split(currentOperator);
+        expressionParts[1] = `(-${expressionParts[1]})`;
+        inputDisplay.value = expressionParts[0] + currentOperator + expressionParts[1];
+    } else if (inputDisplay.value != '' && currentOperator === "-") {
+        expression = inputDisplay.value;
+        const str = inputDisplay.value.replace(/(-.*?)(-)/, '$1+');
+        expressionParts = expression.split("-")
+        currentOperator = "+";
+        inputDisplay.value = expressionParts[0] + currentOperator + expressionParts[1];
+    } else {
+        inputDisplay.value = `(-${inputDisplay.value})`;
     }
 })
 
