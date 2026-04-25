@@ -52,6 +52,7 @@ function getTotal() {
     if (expression.includes("%") && currentOperator == '') {
         expression = expression.replace("%", "");
         result = new Function(`return ${expression}/100`)();
+        expressionDisplay.textContent = inputDisplay.value;
         inputDisplay.value = result;
     }
     if (inputDisplay.value.includes("(-") && !currentOperator) {
