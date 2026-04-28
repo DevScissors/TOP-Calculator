@@ -1,5 +1,5 @@
 let firstNum = 0;
-let secondNum = 0;
+let secondNum = '';
 let operator = '';
 let runningSum = 0;
 
@@ -18,20 +18,25 @@ function getSecondNum() {
 }
 
 function add(firstNum, secondNum) {
+
     if (runningSum === 0 && firstNum != 0) {
         expressionDisplay.textContent = inputDisplay.value;
-        runningSum = parseFloat(firstNum) + parseFloat(secondNum);
+        runningSum = Number(firstNum) + Number(secondNum);
+        return inputDisplay.value = runningSum;
+    } else if (runningSum === 0 && firstNum && secondNum != 0) {
+        expressionDisplay.textContent = inputDisplay.value;
+        runningSum = Number(firstNum) + Number(secondNum);
         return inputDisplay.value = runningSum;
     } else {
         expressionDisplay.textContent = inputDisplay.value;
-        runningSum = runningSum + parseFloat(secondNum);
+        runningSum = runningSum + Number(secondNum);
         return inputDisplay.value = runningSum;
     }
 }
 
 function subtract(firstNum, secondNum) {
     if (runningSum === 0 && firstNum != 0) {
-        expressionDisplay = inputDisplay.value;
+        expressionDisplay.textContent = inputDisplay.value;
         runningSum = firstNum - secondNum;
         return inputDisplay.value = runningSum;
     }
@@ -39,7 +44,7 @@ function subtract(firstNum, secondNum) {
 
 function multiply(firstNum, secondNum) {
     if (runningSum === 0 && firstNum != 0) {
-        expressionDisplay = inputDisplay.value;
+        expressionDisplay.textContent = inputDisplay.value;
         runningSum = firstNum * secondNum;
         return inputDisplay.value = runningSum;
     }
@@ -47,7 +52,7 @@ function multiply(firstNum, secondNum) {
 
 function divide(firstNum, secondNum) {
     if (runningSum === 0 && firstNum != 0) {
-        expressionDisplay = inputDisplay.value;
+        expressionDisplay.textContent = inputDisplay.value;
         runningSum = firstNum / secondNum;
         return inputDisplay.value = runningSum;
     } else if (firstNum != 0 && secondNum === 0) {
@@ -87,60 +92,36 @@ function operate(operator, firstNum, secondNum) {
 }
 
 function handleEqualsClick() {
-    operate(operator, firstNum, secondNum);
-    clearButtonImageToggle();
-    operator = '';
+    const evalParts = inputDisplay.value.split(operator);
+    if (evalParts[1] === '') {
+        equalsButton.disabled = true;
+    } else {
+        operate(operator, firstNum, secondNum);
+        clearButtonImageToggle();
+        secondNum = '';
+        operator = '';
+    }
+    equalsButton.disabled = false;
 }
 
 const equalsButton = document.querySelector(".operator-equals");
 const expressionDisplay = document.querySelector(".expression-display");
+
 expressionDisplay.textContent = '';
 
 equalsButton.addEventListener("click", () => handleEqualsClick());
 
-/*function getTotal() {
-    let result = null;
-    let expression = inputDisplay.value;
-    let parts = null;
-    if (expression.includes("%") && operator) {
-        parts = expression.split(operator);
-        if (parts[0].includes("%")) {
-            parts[0] = parts[0].replace("%", "");
-            result = (parts[0] / 100) + operator + parts[1];
-            return inputDisplay.value = result;
-        } else {
-            parts[1] = parts[1].replace("%", "");
-            result = (parts[0] * parts[1])/100 + operator + parts[0];
-            return inputDisplay.value = result;
-        }
-    }
-    if (expression.includes("%") && operator == '') {
-        expression = expression.replace("%", "");
-        result = new Function(`return ${expression}/100`)();
-        inputDisplay.value = result;
-    }
-    if (inputDisplay.value.includes("(-") && !operator) {
-        return;
-    }
-    parts = expression.split(operator);
-    if (operator === "x") {
-        operator = "*";
-        result = new Function(`return ${parts[0]} ${operator} ${parts[1]}`)();
-        inputDisplay.value = result;
-    } else if (operator === "\u00F7") {
-        operator = "/";
-        result = new Function(`return ${parts[0]} ${operator} ${parts[1]}`)();
-        inputDisplay.value = result;
-    } else if (operator === "") {
-        result = inputDisplay.value;
-    } else {
-        result = new Function(`return ${parts[0]} ${operator} ${parts[1]}`)();
-        inputDisplay.value = result;
-    }
+function clearDisplayAndNumberValues() {
+    inputDisplay.value = '';
+    expressionDisplay.textContent = '';
+    runningSum = 0;
+    firstNum = 0;
+    secondNum = '';
+    operator = '';
 }
-*/
 
 const inputDisplay = document.querySelector(".results-input");
+
 if (inputDisplay.value !== "") {
     firstNum = inputDisplay.value;
 }
@@ -151,15 +132,14 @@ let timer;
 const longPress = 800;
 clearButton.addEventListener("click", () => {
     if (expressionDisplay.textContent != "") {
-        inputDisplay.value = '';
-        expressionDisplay.textContent = '';
         decimalPointButton.disabled = false;
+        clearDisplayAndNumberValues();
+
     }
 })
 clearButton.addEventListener("mousedown", () => {
     timer = setTimeout(() => {
-        inputDisplay.value = '';
-        expressionDisplay.textContent = '';
+        clearDisplayAndNumberValues();
         clearButton.textContent = "AC";
         clearButtonImageToggle();
     }, longPress)
@@ -208,11 +188,8 @@ function handleOperatorClick(button) {
     operator = button.value;
     if (inputDisplay.value === '') {
         inputDisplay.value = firstNum + operator;
-    } else if (!operator) {
-        inputDisplay.value = inputDisplay.value + operator;
-    } else if (/([+\-\x]|\u00F7)$/.test(inputDisplay.value)) {
-        inputDisplay.value = inputDisplay.value.slice(0, -1) + operator;
     } else {
+        operate(operator, firstNum, secondNum);
         inputDisplay.value = inputDisplay.value + operator;
     }
 }
