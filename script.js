@@ -3,24 +3,42 @@ let secondNum = '';
 let operator = '';
 let runningSum = 0;
 
-function getFirstNum() {
+
+function checkValues() {
     if (operator === '') {
         firstNum = inputDisplay.value;
-    }
-    return firstNum;
-}
-
-function getSecondNum() {
-    if (firstNum && operator != '') {
+    } else if (operator != '' && secondNum === '') {
         const evaluationParts = inputDisplay.value.split(operator);
         secondNum = evaluationParts[1];
+    } else if (operator != '' && secondNum != '') {
+        const evaluationParts = inputDisplay.value.split(operator);
+        firstNum = evaluationParts[0];
+        secondNum = evaluationParts[1];
+    } else {
+        return inputDisplay.value;
     }
 }
 
-function add(firstNum, secondNum) {
+function handleNumberClick(button) {
+    inputDisplay.value += button.value;
+    checkValues();
+    clearButtonImageToggle();
+}
 
+const numberButtons = document.querySelectorAll(".number");
+
+numberButtons.forEach((button) => {
+    button.addEventListener("mousedown", () => {
+        button.style.filter = "brightness(3)";
+    })
+    button.addEventListener("mouseup", () => {
+        button.style.filter = '';
+    })
+    button.addEventListener("click", () => handleNumberClick(button));
+})
+
+function add(firstNum, secondNum) {
     if (runningSum === 0 && firstNum != 0) {
-        expressionDisplay.textContent = inputDisplay.value;
         runningSum = Number(firstNum) + Number(secondNum);
         return inputDisplay.value = runningSum;
     } else if (runningSum === 0 && firstNum && secondNum != 0) {
@@ -36,36 +54,51 @@ function add(firstNum, secondNum) {
 
 function subtract(firstNum, secondNum) {
     if (runningSum === 0 && firstNum != 0) {
+        runningSum = Number(firstNum) - Number(secondNum);
+        return inputDisplay.value = runningSum;
+    } else if (runningSum === 0 && firstNum && secondNum != 0) {
         expressionDisplay.textContent = inputDisplay.value;
-        runningSum = firstNum - secondNum;
+        runningSum = Number(firstNum) - Number(secondNum);
+        return inputDisplay.value = runningSum;
+    } else {
+        expressionDisplay.textContent = inputDisplay.value;
+        runningSum = runningSum - Number(secondNum);
         return inputDisplay.value = runningSum;
     }
 }
 
 function multiply(firstNum, secondNum) {
-    if (runningSum === 0 && firstNum != 0) {
-        expressionDisplay.textContent = inputDisplay.value;
-        runningSum = firstNum * secondNum;
+    if (firstNum === 0 && secondNum != '') {
+        runningSum = Number(firstNum) * Number(secondNum);
         return inputDisplay.value = runningSum;
+    } else if (runningSum != 0 && secondNum != '') {
+        expressionDisplay.textContent = inputDisplay.value;
+        runningSum = runningSum * Number(secondNum);
+        return inputDisplay.value = runningSum;
+    } else if (firstNum != 0 && secondNum != '') {
+        expressionDisplay.textContent = inputDisplay.value;
+        runningSum = Number(firstNum) * Number(secondNum);
+        return inputDisplay.value = runningSum;
+    } else {
+        return inputDisplay.value;
     }
 }
 
 function divide(firstNum, secondNum) {
-    if (runningSum === 0 && firstNum != 0) {
+    operator = "÷";
+    if (firstNum === 0 && secondNum != '') {
+        return alert("0 divided by anything is 0");
+    } else if (runningSum === 0 && secondNum === 0) {
+        return alert("Um, can't divide by 0, nice try!");
+    } else if (firstNum != 0 && secondNum != 0) {
         expressionDisplay.textContent = inputDisplay.value;
-        runningSum = firstNum / secondNum;
+        runningSum = Number(firstNum) / Number(secondNum);
         return inputDisplay.value = runningSum;
-    } else if (firstNum != 0 && secondNum === 0) {
-        return inputDisplay.value = "Um, can't divide by 0, nice try!";
+    } else {
+        return inputDisplay.value;
     }
 }
 
-
-// const percentage = () => {
-//     if(firstNum && !secondNum) {
-//         inputDisplay.value = firstNum / 100;
-//     } 
-// }
 
 function operate(operator, firstNum, secondNum) {
     switch (operator) {
@@ -81,8 +114,8 @@ function operate(operator, firstNum, secondNum) {
             operator = "x";
             multiply(firstNum, secondNum);
             break;
-        case "/":
-            operator = "\u00F7"
+        case "÷":
+            operator = "÷"
             divide(firstNum, secondNum);
             break;
         default:
@@ -122,16 +155,16 @@ function clearDisplayAndNumberValues() {
 
 const inputDisplay = document.querySelector(".results-input");
 
-if (inputDisplay.value !== "") {
+if (inputDisplay.value !== '') {
     firstNum = inputDisplay.value;
 }
 
-const clearButton = document.querySelector(".clear");
+const clearButton = document.querySelector('.clear');
 
 let timer;
 const longPress = 800;
-clearButton.addEventListener("click", () => {
-    if (expressionDisplay.textContent != "") {
+clearButton.addEventListener('click', () => {
+    if (expressionDisplay.textContent != '') {
         decimalPointButton.disabled = false;
         clearDisplayAndNumberValues();
 
@@ -165,32 +198,45 @@ const clearButtonImageToggle = () => {
     deleteLeftIcon.style.paddingRight = "5px";
     deleteLeftIcon.src = "./images/delete-left-icon.png";
 
-    if (inputDisplay.value == "" || expressionDisplay.textContent != "") {
+    if (inputDisplay.value == '' || expressionDisplay.textContent != '') {
         clearButton.textContent = "AC";
-        if (clearButton.contains(deleteLeftIcon)) {
-            clearButton.removeChild(deleteLeftIcon);
-        }
+    } else if (inputDisplay.value != '') {
+        clearButton.textContent = '';
+        clearButton.appendChild(deleteLeftIcon);
     } else {
-        clearButton.textContent = "";
-        return clearButton.appendChild(deleteLeftIcon);
+        clearButton.textContent = "AC";
     }
 }
 
 clearButtonImageToggle();
 
 function deleteDigit() {
-    if (inputDisplay.value != "" && expressionDisplay.textContent == '') {
+    const regexOperators = /[+\-*\÷]/;
+    if (inputDisplay.value != '') {
         inputDisplay.value = inputDisplay.value.slice(0, -1);
     }
+    if (!regexOperators.test(inputDisplay.value)) {
+        operator = '';
+        secondNum = '';
+    }
+    checkValues();
 }
 
 function handleOperatorClick(button) {
-    operator = button.value;
+    if (operator == '') {
+        operator = button.value;
+    }
+    const evalParts = inputDisplay.value.split(operator);
     if (inputDisplay.value === '') {
         inputDisplay.value = firstNum + operator;
-    } else {
+    } else if (evalParts[1] != '') {
         operate(operator, firstNum, secondNum);
+        operator = button.value;
         inputDisplay.value = inputDisplay.value + operator;
+    } else {
+        checkValues();
+        operator = button.value;
+        inputDisplay.value = firstNum + operator;
     }
 }
 
@@ -201,36 +247,21 @@ operatorButtons.forEach((button) => {
         button.style.filter = "brightness(1.2)";
     })
     button.addEventListener("mouseup", () => {
-        button.style.filter = "";
+        button.style.filter = '';
     })
     button.addEventListener("click", () => handleOperatorClick(button));
 })
 
-function handleNumberClick(button) {
-    inputDisplay.value += button.value;
-    getFirstNum(button.value);
-    getSecondNum(button.value);
-    clearButtonImageToggle();
-}
 
-const numberButtons = document.querySelectorAll(".number");
-
-numberButtons.forEach((button) => {
-    button.addEventListener("mousedown", () => {
-        button.style.filter = "brightness(3)";
-    })
-    button.addEventListener("mouseup", () => {
-        button.style.filter = "";
-    })
-    button.addEventListener("click", () => handleNumberClick(button));
-})
 
 function handleDecimalPointClick(decimalPointButton) {
-    if (inputDisplay.value === '') {
-        decimalPointButton.disabled = false;
-    } else if (inputDisplay.value.includes(".")) {
-        decimalPointButton.disabled = true;
+    checkValues();
+    if (firstNum.includes(".") && secondNum === '') {
+        inputDisplay.value = firstNum;
+    } else if (secondNum.includes(".")) {
+        inputDisplay.value = firstNum + operator + secondNum;
     } else {
+        decimalPointButton.disabled = false;
         inputDisplay.value += decimalPointButton.value;
     }
 }
@@ -257,7 +288,7 @@ miscButtons.forEach((button) => {
         button.style.filter = "brightness(1.5)";
     })
     button.addEventListener("mouseup", () => {
-        button.style.filter = "";
+        button.style.filter = '';
     })
 })
 
@@ -266,14 +297,14 @@ function handlePositiveNegClick() {
 
     if (inputDisplay.value.charAt(0) === "-") {
         expressionDisplay.textContent = '';
-        inputDisplay.value = inputDisplay.value.replace("-", "");
+        inputDisplay.value = inputDisplay.value.replace("-", '');
     }
     else if (!inputDisplay.value.includes("(-") && !operator) {
         expressionDisplay.textContent = '';
         inputDisplay.value = `(-${inputDisplay.value})`;
     } else if (inputDisplay.value.includes("(-") && !operator) {
         expressionDisplay.textContent = '';
-        inputDisplay.value = inputDisplay.value.replace(regexPosNeg, "");
+        inputDisplay.value = inputDisplay.value.replace(regexPosNeg, '');
     } else if (inputDisplay.value != '' && operator != "-") {
         let expression = inputDisplay.value;
         let expressionParts = expression.split(operator);
