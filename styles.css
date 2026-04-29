@@ -39,6 +39,9 @@
     background-color: black;
     font-size: 36px;
     text-align: right;
+    overflow-x: auto;
+    white-space: nowrap;
+    outline: none;
 }
 
 input {

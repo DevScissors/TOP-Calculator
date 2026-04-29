@@ -5,6 +5,7 @@ let runningSum = 0;
 
 
 function checkValues() {
+    inputDisplay.scrollLeft = inputDisplay.scrollWidth;
     if (operator === '') {
         firstNum = inputDisplay.value;
     } else if (operator != '' && secondNum === '') {
@@ -99,6 +100,12 @@ function divide(firstNum, secondNum) {
     }
 }
 
+function percentage(firstNum, secondNum) {
+    if (firstNum != 0 && secondNum === '') {
+        inputDisplay.value = firstNum + "%";
+    }
+}
+
 
 function operate(operator, firstNum, secondNum) {
     switch (operator) {
@@ -154,6 +161,7 @@ function clearDisplayAndNumberValues() {
 }
 
 const inputDisplay = document.querySelector(".results-input");
+
 
 if (inputDisplay.value !== '') {
     firstNum = inputDisplay.value;
@@ -223,6 +231,7 @@ function deleteDigit() {
 }
 
 function handleOperatorClick(button) {
+    checkValues();
     if (operator == '') {
         operator = button.value;
     }
@@ -234,7 +243,6 @@ function handleOperatorClick(button) {
         operator = button.value;
         inputDisplay.value = inputDisplay.value + operator;
     } else {
-        checkValues();
         operator = button.value;
         inputDisplay.value = firstNum + operator;
     }
@@ -271,16 +279,6 @@ const decimalPointButton = document.querySelector(".decimal-point");
 decimalPointButton.addEventListener("click", () => handleDecimalPointClick(decimalPointButton));
 
 
-// const percentageButtonListener = () => {
-
-//     const percentageButton = document.querySelector(".percentage");
-
-//     percentageButton.addEventListener("click", () => {
-//         inputDisplay.value = inputDisplay.value += percentageButton.value;
-//     })
-// }
-
-
 const miscButtons = document.querySelectorAll(".misc");
 
 miscButtons.forEach((button) => {
@@ -289,6 +287,11 @@ miscButtons.forEach((button) => {
     })
     button.addEventListener("mouseup", () => {
         button.style.filter = '';
+    })
+    button.addEventListener("click", () => {
+        if (button.value === "%") {
+            inputDisplay.value = inputDisplay.value + "%";
+        }
     })
 })
 
