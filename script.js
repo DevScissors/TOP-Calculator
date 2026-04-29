@@ -6,7 +6,7 @@ let runningSum = 0;
 
 function checkValues() {
     inputDisplay.scrollLeft = inputDisplay.scrollWidth;
-    if (operator === '') {
+    if (operator === '' && runningSum === 0) {
         firstNum = inputDisplay.value;
     } else if (operator != '' && secondNum === '') {
         const evaluationParts = inputDisplay.value.split(operator);
@@ -15,6 +15,9 @@ function checkValues() {
         const evaluationParts = inputDisplay.value.split(operator);
         firstNum = evaluationParts[0];
         secondNum = evaluationParts[1];
+    } else if (runningSum != 0 && secondNum === '') {
+        firstNum = runningSum.toString();
+        inputDisplay.value = runningSum + operator;
     } else {
         return inputDisplay.value;
     }
@@ -296,31 +299,55 @@ miscButtons.forEach((button) => {
 })
 
 function handlePositiveNegClick() {
-    const regexPosNeg = /[()-]/g;
-
-    if (inputDisplay.value.charAt(0) === "-") {
+    if (runningSum < 0 && secondNum === '') {
+        runningSum = runningSum.toString().replace("-", "");
+        inputDisplay.value = runningSum;
         expressionDisplay.textContent = '';
-        inputDisplay.value = inputDisplay.value.replace("-", '');
-    }
-    else if (!inputDisplay.value.includes("(-") && !operator) {
+    } else if (runningSum > 0 && secondNum === '') {
+        runningSum = `-${runningSum}`;
+        inputDisplay.value = runningSum;
+    } else if (firstNum != 0 && secondNum === '' && operator === '' && runningSum === 0) {
         expressionDisplay.textContent = '';
-        inputDisplay.value = `(-${inputDisplay.value})`;
-    } else if (inputDisplay.value.includes("(-") && !operator) {
+        inputDisplay.value = `-${firstNum}`;
+    } else if (firstNum != 0 && secondNum === '' && operator != '') {
         expressionDisplay.textContent = '';
-        inputDisplay.value = inputDisplay.value.replace(regexPosNeg, '');
-    } else if (inputDisplay.value != '' && operator != "-") {
-        let expression = inputDisplay.value;
-        let expressionParts = expression.split(operator);
-        expressionParts[1] = `(-${expressionParts[1]})`;
-        inputDisplay.value = expressionParts[0] + operator + expressionParts[1];
-    } else if (inputDisplay.value != '' && operator === "-") {
-        expression = inputDisplay.value;
-        const str = inputDisplay.value.replace(/(-.*?)(-)/, '$1+');
-        expressionParts = expression.split("-")
+        inputDisplay.value = `-${firstNum}${operator}`;
+    } else if (firstNum.charAt(0) === "-" && secondNum === '' && runningSum === 0) {
+        expressionDisplay.textContent = '';
+        inputDisplay.value = firstNum;
+    } else if (firstNum.charAt(0) === "-" && secondNum != '' && operator === "-") {
+        const expressionParts = inputDisplay.value.split(/^(-[^-]*)-/).filter((emptyStr) => emptyStr != '');
+        secondNum = expressionParts[1];
         operator = "+";
-        inputDisplay.value = expressionParts[0] + operator + expressionParts[1];
-    } else {
-        inputDisplay.value = `(-${inputDisplay.value})`;
+        inputDisplay.value = `${firstNum}${operator}${secondNum}`;
+    } else if (secondNum != '' && operator === "+") {
+        const expressionParts = inputDisplay.value.split(operator);
+        secondNum = expressionParts[1];
+        operator = "-";
+        inputDisplay.value = `${firstNum}${operator}${secondNum}`;
+    } else if (runningSum != 0 && inputDisplay.value.charAt(0) === "-") {
+        inputDisplay.value = `${inputDisplay.value}`;
+        expressionDisplay.textContent = '';
+    }
+    // else if (!inputDisplay.value.includes("(-") && !operator) {
+    //     expressionDisplay.textContent = '';
+    //     inputDisplay.value = `(-${inputDisplay.value})`;
+    // } else if (inputDisplay.value.includes("(-") && !operator) {
+    //     expressionDisplay.textContent = '';
+    //     inputDisplay.value = inputDisplay.value.replace(regexPosNeg, '');
+    // } else if (inputDisplay.value != '' && operator != "-") {
+    //     let expression = inputDisplay.value;
+    //     let expressionParts = expression.split(operator);
+    //     expressionParts[1] = `(-${expressionParts[1]})`;
+    //     inputDisplay.value = expressionParts[0] + operator + expressionParts[1];
+    // } else if (inputDisplay.value != '' && operator === "-") {
+    //     expression = inputDisplay.value;
+    //     const str = inputDisplay.value.replace(/(-.*?)(-)/, '$1+');
+    //     expressionParts = expression.split("-")
+    //     operator = "+";
+    //     inputDisplay.value = expressionParts[0] + operator + expressionParts[1];
+    else {
+        inputDisplay.value = inputDisplay.value;
     }
 }
 
