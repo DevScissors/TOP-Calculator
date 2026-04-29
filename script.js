@@ -1,356 +1,284 @@
-let firstNum = 0;
-let secondNum = '';
-let operator = '';
-let runningSum = 0;
+const inputDisplay = document.querySelector('.results-input');
+const expressionDisplay = document.querySelector('.expression-display');
+const numberButtons = document.querySelectorAll('.number');
+const operatorButtons = document.querySelectorAll('.operator');
+const decimalPointButton = document.querySelector('.decimal-point');
+const clearButton = document.querySelector('.clear');
+const positiveNegButton = document.querySelector('.positive-negative');
+const percentageButton = document.querySelector('.percentage');
+const equalsButton = document.querySelector('.operator-equals');
 
+let shouldResetInput = false;
 
-function checkValues() {
+function updateDisplay(value) {
+    inputDisplay.value = value;
     inputDisplay.scrollLeft = inputDisplay.scrollWidth;
-    if (operator === '' && runningSum === 0) {
-        firstNum = inputDisplay.value;
-    } else if (operator != '' && secondNum === '') {
-        const evaluationParts = inputDisplay.value.split(operator);
-        secondNum = evaluationParts[1];
-    } else if (operator != '' && secondNum != '') {
-        const evaluationParts = inputDisplay.value.split(operator);
-        firstNum = evaluationParts[0];
-        secondNum = evaluationParts[1];
-    } else if (runningSum != 0 && secondNum === '') {
-        firstNum = runningSum.toString();
-        inputDisplay.value = runningSum + operator;
-    } else {
-        return inputDisplay.value;
+    updateClearButton();
+}
+
+function getExpression() {
+    return inputDisplay.value || '';
+}
+
+function parseExpression(expression) {
+    const match = expression.match(/^(-?\d*\.?\d+%?)([+\-x÷])?(.*)$/);
+    return {
+        first: match?.[1] || '',
+        operator: match?.[2] || '',
+        second: match?.[3] || ''
+    };
+}
+
+function toggleNumber(value) {
+    return value.startsWith('-') ? value.slice(1) : '-' + value;
+}
+
+function parseNumber(value) {
+    if (value.endsWith('%')) {
+        const normalized = Number(value.slice(0, -1));
+        return Number.isNaN(normalized) ? NaN : normalized / 100;
+    }
+    return Number(value);
+}
+
+function calculate(first, operator, second) {
+    const a = parseNumber(first);
+    const b = parseNumber(second);
+
+    if (Number.isNaN(a) || Number.isNaN(b)) return null;
+
+    if (second.endsWith('%')) {
+        if (operator === '+') {
+            return String(a + a * b);
+        }
+        if (operator === '-') {
+            return String(a - a * b);
+        }
+    }
+
+    switch (operator) {
+        case '+':
+            return String(a + b);
+        case '-':
+            return String(a - b);
+        case 'x':
+            return String(a * b);
+        case '÷':
+            if (b === 0) {
+                alert("Um, can't divide by 0, nice try!");
+                return null;
+            }
+            return String(a / b);
+        default:
+            return null;
     }
 }
 
-function handleNumberClick(button) {
-    inputDisplay.value += button.value;
-    checkValues();
-    clearButtonImageToggle();
+function appendDigit(digit) {
+    if (shouldResetInput) {
+        updateDisplay(digit);
+        shouldResetInput = false;
+        return;
+    }
+
+    const expression = getExpression();
+    if (expression === '0') {
+        updateDisplay(digit);
+    } else {
+        updateDisplay(expression + digit);
+    }
 }
 
-const numberButtons = document.querySelectorAll(".number");
+function appendDecimal() {
+    const expression = getExpression();
+    const { first, operator, second } = parseExpression(expression);
+
+    if (!operator) {
+        if (first.includes('.')) return;
+        updateDisplay(expression ? expression + '.' : '0.');
+        shouldResetInput = false;
+        return;
+    }
+
+    if (second.includes('.')) return;
+    updateDisplay(expression + '.');
+}
+
+function setOperator(newOperator) {
+    const expression = getExpression();
+    const { first, operator, second } = parseExpression(expression);
+
+    if (!first) return;
+
+    if (!operator) {
+        if (first.endsWith('%')) {
+            const normalizedFirst = parseNumber(first);
+            if (Number.isNaN(normalizedFirst)) return;
+            updateDisplay(String(normalizedFirst) + newOperator);
+            shouldResetInput = false;
+            return;
+        }
+
+        updateDisplay(first + newOperator);
+        shouldResetInput = false;
+        return;
+    }
+
+    if (!second) {
+        updateDisplay(first + newOperator);
+        return;
+    }
+
+    const result = calculate(first, operator, second);
+    if (result === null) return;
+
+    expressionDisplay.textContent = expression;
+    updateDisplay(result + newOperator);
+    shouldResetInput = false;
+}
+
+function handleEquals() {
+    const expression = getExpression();
+    const { first, operator, second } = parseExpression(expression);
+
+    if (!operator || !second) return;
+
+    const result = calculate(first, operator, second);
+    if (result === null) return;
+
+    expressionDisplay.textContent = expression;
+    updateDisplay(result);
+    shouldResetInput = true;
+}
+
+function toggleSign() {
+    const expression = getExpression();
+    const { first, operator, second } = parseExpression(expression);
+
+    if (!operator) {
+        if (!first) return;
+        updateDisplay(toggleNumber(first));
+        return;
+    }
+
+    if (!second) {
+        updateDisplay(toggleNumber(first) + operator);
+        return;
+    }
+
+    if (operator === '+' || operator === '-') {
+        const toggled = toggleNumber(second);
+        if (toggled.startsWith('-')) {
+            const displayOp = operator === '+' ? '-' : '+';
+            updateDisplay(first + displayOp + toggled.slice(1));
+        } else {
+            updateDisplay(first + operator + toggled);
+        }
+        return;
+    }
+
+    updateDisplay(first + operator + toggleNumber(second));
+}
+
+function applyPercent() {
+    const expression = getExpression();
+    const { first, operator, second } = parseExpression(expression);
+
+    if (!operator) {
+        if (!first || first.endsWith('%')) return;
+        updateDisplay(first + '%');
+        return;
+    }
+
+    if (!second || second.endsWith('%')) return;
+    updateDisplay(first + operator + second + '%');
+}
+
+function deleteLastCharacter() {
+    const expression = getExpression();
+    if (!expression) return;
+    updateDisplay(expression.slice(0, -1));
+}
+
+function clearAll() {
+    expressionDisplay.textContent = '';
+    updateDisplay('');
+    shouldResetInput = false;
+}
+
+function updateClearButton() {
+    const deleteLeftIcon = document.createElement('img');
+    deleteLeftIcon.style.paddingTop = '5px';
+    deleteLeftIcon.style.paddingRight = '5px';
+    deleteLeftIcon.src = './images/delete-left-icon.png';
+
+    if (getExpression() === '') {
+        clearButton.textContent = 'AC';
+        if (clearButton.contains(deleteLeftIcon)) {
+            clearButton.removeChild(deleteLeftIcon);
+        }
+        return;
+    }
+
+    clearButton.textContent = '';
+    if (!clearButton.querySelector('img')) {
+        clearButton.appendChild(deleteLeftIcon);
+    }
+}
+
+function addButtonEffects(button, brightness) {
+    button.addEventListener('mousedown', () => {
+        button.style.filter = `brightness(${brightness})`;
+    });
+    button.addEventListener('mouseup', () => {
+        button.style.filter = '';
+    });
+    button.addEventListener('mouseout', () => {
+        button.style.filter = '';
+    });
+}
 
 numberButtons.forEach((button) => {
-    button.addEventListener("mousedown", () => {
-        button.style.filter = "brightness(3)";
-    })
-    button.addEventListener("mouseup", () => {
-        button.style.filter = '';
-    })
-    button.addEventListener("click", () => handleNumberClick(button));
-})
-
-function add(firstNum, secondNum) {
-    if (runningSum === 0 && firstNum != 0) {
-        runningSum = Number(firstNum) + Number(secondNum);
-        return inputDisplay.value = runningSum;
-    } else if (runningSum === 0 && firstNum && secondNum != 0) {
-        expressionDisplay.textContent = inputDisplay.value;
-        runningSum = Number(firstNum) + Number(secondNum);
-        return inputDisplay.value = runningSum;
-    } else {
-        expressionDisplay.textContent = inputDisplay.value;
-        runningSum = runningSum + Number(secondNum);
-        return inputDisplay.value = runningSum;
-    }
-}
-
-function subtract(firstNum, secondNum) {
-    if (runningSum === 0 && firstNum != 0) {
-        runningSum = Number(firstNum) - Number(secondNum);
-        return inputDisplay.value = runningSum;
-    } else if (runningSum === 0 && firstNum && secondNum != 0) {
-        expressionDisplay.textContent = inputDisplay.value;
-        runningSum = Number(firstNum) - Number(secondNum);
-        return inputDisplay.value = runningSum;
-    } else {
-        expressionDisplay.textContent = inputDisplay.value;
-        runningSum = runningSum - Number(secondNum);
-        return inputDisplay.value = runningSum;
-    }
-}
-
-function multiply(firstNum, secondNum) {
-    if (firstNum === 0 && secondNum != '') {
-        runningSum = Number(firstNum) * Number(secondNum);
-        return inputDisplay.value = runningSum;
-    } else if (runningSum != 0 && secondNum != '') {
-        expressionDisplay.textContent = inputDisplay.value;
-        runningSum = runningSum * Number(secondNum);
-        return inputDisplay.value = runningSum;
-    } else if (firstNum != 0 && secondNum != '') {
-        expressionDisplay.textContent = inputDisplay.value;
-        runningSum = Number(firstNum) * Number(secondNum);
-        return inputDisplay.value = runningSum;
-    } else {
-        return inputDisplay.value;
-    }
-}
-
-function divide(firstNum, secondNum) {
-    operator = "÷";
-    if (firstNum === 0 && secondNum != '') {
-        return alert("0 divided by anything is 0");
-    } else if (runningSum === 0 && secondNum === 0) {
-        return alert("Um, can't divide by 0, nice try!");
-    } else if (firstNum != 0 && secondNum != 0) {
-        expressionDisplay.textContent = inputDisplay.value;
-        runningSum = Number(firstNum) / Number(secondNum);
-        return inputDisplay.value = runningSum;
-    } else {
-        return inputDisplay.value;
-    }
-}
-
-function percentage(firstNum, secondNum) {
-    if (firstNum != 0 && secondNum === '') {
-        inputDisplay.value = firstNum + "%";
-    }
-}
-
-
-function operate(operator, firstNum, secondNum) {
-    switch (operator) {
-        case "+":
-            operator = "+";
-            add(firstNum, secondNum);
-            break;
-        case "-":
-            operator = "-";
-            subtract(firstNum, secondNum);
-            break;
-        case "x":
-            operator = "x";
-            multiply(firstNum, secondNum);
-            break;
-        case "÷":
-            operator = "÷"
-            divide(firstNum, secondNum);
-            break;
-        default:
-            operator = '';
-    }
-    return operator;
-}
-
-function handleEqualsClick() {
-    const evalParts = inputDisplay.value.split(operator);
-    if (evalParts[1] === '') {
-        equalsButton.disabled = true;
-    } else {
-        operate(operator, firstNum, secondNum);
-        clearButtonImageToggle();
-        secondNum = '';
-        operator = '';
-    }
-    equalsButton.disabled = false;
-}
-
-const equalsButton = document.querySelector(".operator-equals");
-const expressionDisplay = document.querySelector(".expression-display");
-
-expressionDisplay.textContent = '';
-
-equalsButton.addEventListener("click", () => handleEqualsClick());
-
-function clearDisplayAndNumberValues() {
-    inputDisplay.value = '';
-    expressionDisplay.textContent = '';
-    runningSum = 0;
-    firstNum = 0;
-    secondNum = '';
-    operator = '';
-}
-
-const inputDisplay = document.querySelector(".results-input");
-
-
-if (inputDisplay.value !== '') {
-    firstNum = inputDisplay.value;
-}
-
-const clearButton = document.querySelector('.clear');
-
-let timer;
-const longPress = 800;
-clearButton.addEventListener('click', () => {
-    if (expressionDisplay.textContent != '') {
-        decimalPointButton.disabled = false;
-        clearDisplayAndNumberValues();
-
-    }
-})
-clearButton.addEventListener("mousedown", () => {
-    timer = setTimeout(() => {
-        clearDisplayAndNumberValues();
-        clearButton.textContent = "AC";
-        clearButtonImageToggle();
-    }, longPress)
-})
-
-clearButton.addEventListener("mouseup", () => {
-    clearTimeout(timer);
-    if (inputDisplay.value !== '') {
-        deleteDigit();
-        clearButtonImageToggle();
-    }
-})
-
-clearButton.addEventListener("mouseout", () => {
-    clearTimeout(timer);
-})
-
-
-const clearButtonImageToggle = () => {
-    const deleteLeftIcon = document.createElement("img");
-
-    deleteLeftIcon.style.paddingTop = "5px";
-    deleteLeftIcon.style.paddingRight = "5px";
-    deleteLeftIcon.src = "./images/delete-left-icon.png";
-
-    if (inputDisplay.value == '' || expressionDisplay.textContent != '') {
-        clearButton.textContent = "AC";
-    } else if (inputDisplay.value != '') {
-        clearButton.textContent = '';
-        clearButton.appendChild(deleteLeftIcon);
-    } else {
-        clearButton.textContent = "AC";
-    }
-}
-
-clearButtonImageToggle();
-
-function deleteDigit() {
-    const regexOperators = /[+\-*\÷]/;
-    if (inputDisplay.value != '') {
-        inputDisplay.value = inputDisplay.value.slice(0, -1);
-    }
-    if (!regexOperators.test(inputDisplay.value)) {
-        operator = '';
-        secondNum = '';
-    }
-    checkValues();
-}
-
-function handleOperatorClick(button) {
-    checkValues();
-    if (operator == '') {
-        operator = button.value;
-    }
-    const evalParts = inputDisplay.value.split(operator);
-    if (inputDisplay.value === '') {
-        inputDisplay.value = firstNum + operator;
-    } else if (evalParts[1] != '') {
-        operate(operator, firstNum, secondNum);
-        operator = button.value;
-        inputDisplay.value = inputDisplay.value + operator;
-    } else {
-        operator = button.value;
-        inputDisplay.value = firstNum + operator;
-    }
-}
-
-const operatorButtons = document.querySelectorAll(".operator");
+    addButtonEffects(button, 3);
+    button.addEventListener('click', () => appendDigit(button.value));
+});
 
 operatorButtons.forEach((button) => {
-    button.addEventListener("mousedown", () => {
-        button.style.filter = "brightness(1.2)";
-    })
-    button.addEventListener("mouseup", () => {
-        button.style.filter = '';
-    })
-    button.addEventListener("click", () => handleOperatorClick(button));
-})
+    addButtonEffects(button, 1.2);
+    button.addEventListener('click', () => setOperator(button.value));
+});
 
+decimalPointButton.addEventListener('click', () => appendDecimal());
+percentageButton.addEventListener('click', () => applyPercent());
+positiveNegButton.addEventListener('click', () => toggleSign());
+equalsButton.addEventListener('click', () => handleEquals());
 
+let clearTimer = null;
+const longPressDuration = 800;
 
-function handleDecimalPointClick(decimalPointButton) {
-    checkValues();
-    if (firstNum.includes(".") && secondNum === '') {
-        inputDisplay.value = firstNum;
-    } else if (secondNum.includes(".")) {
-        inputDisplay.value = firstNum + operator + secondNum;
+clearButton.addEventListener('mousedown', () => {
+    clearTimer = setTimeout(() => {
+        clearAll();
+    }, longPressDuration);
+});
+
+clearButton.addEventListener('mouseup', () => {
+    if (clearTimer) {
+        clearTimeout(clearTimer);
+        clearTimer = null;
+    }
+    if (getExpression()) {
+        deleteLastCharacter();
     } else {
-        decimalPointButton.disabled = false;
-        inputDisplay.value += decimalPointButton.value;
+        clearAll();
     }
-}
+});
 
-const decimalPointButton = document.querySelector(".decimal-point");
-
-decimalPointButton.addEventListener("click", () => handleDecimalPointClick(decimalPointButton));
-
-
-const miscButtons = document.querySelectorAll(".misc");
-
-miscButtons.forEach((button) => {
-    button.addEventListener("mousedown", () => {
-        button.style.filter = "brightness(1.5)";
-    })
-    button.addEventListener("mouseup", () => {
-        button.style.filter = '';
-    })
-    button.addEventListener("click", () => {
-        if (button.value === "%") {
-            inputDisplay.value = inputDisplay.value + "%";
-        }
-    })
-})
-
-function handlePositiveNegClick() {
-    if (runningSum < 0 && secondNum === '') {
-        runningSum = runningSum.toString().replace("-", "");
-        inputDisplay.value = runningSum;
-        expressionDisplay.textContent = '';
-    } else if (runningSum > 0 && secondNum === '') {
-        runningSum = `-${runningSum}`;
-        inputDisplay.value = runningSum;
-    } else if (firstNum != 0 && secondNum === '' && operator === '' && runningSum === 0) {
-        expressionDisplay.textContent = '';
-        inputDisplay.value = `-${firstNum}`;
-    } else if (firstNum != 0 && secondNum === '' && operator != '') {
-        expressionDisplay.textContent = '';
-        inputDisplay.value = `-${firstNum}${operator}`;
-    } else if (firstNum.charAt(0) === "-" && secondNum === '' && runningSum === 0) {
-        expressionDisplay.textContent = '';
-        inputDisplay.value = firstNum;
-    } else if (firstNum.charAt(0) === "-" && secondNum != '' && operator === "-") {
-        const expressionParts = inputDisplay.value.split(/^(-[^-]*)-/).filter((emptyStr) => emptyStr != '');
-        secondNum = expressionParts[1];
-        operator = "+";
-        inputDisplay.value = `${firstNum}${operator}${secondNum}`;
-    } else if (secondNum != '' && operator === "+") {
-        const expressionParts = inputDisplay.value.split(operator);
-        secondNum = expressionParts[1];
-        operator = "-";
-        inputDisplay.value = `${firstNum}${operator}${secondNum}`;
-    } else if (runningSum != 0 && inputDisplay.value.charAt(0) === "-") {
-        inputDisplay.value = `${inputDisplay.value}`;
-        expressionDisplay.textContent = '';
+clearButton.addEventListener('mouseout', () => {
+    if (clearTimer) {
+        clearTimeout(clearTimer);
+        clearTimer = null;
     }
-    // else if (!inputDisplay.value.includes("(-") && !operator) {
-    //     expressionDisplay.textContent = '';
-    //     inputDisplay.value = `(-${inputDisplay.value})`;
-    // } else if (inputDisplay.value.includes("(-") && !operator) {
-    //     expressionDisplay.textContent = '';
-    //     inputDisplay.value = inputDisplay.value.replace(regexPosNeg, '');
-    // } else if (inputDisplay.value != '' && operator != "-") {
-    //     let expression = inputDisplay.value;
-    //     let expressionParts = expression.split(operator);
-    //     expressionParts[1] = `(-${expressionParts[1]})`;
-    //     inputDisplay.value = expressionParts[0] + operator + expressionParts[1];
-    // } else if (inputDisplay.value != '' && operator === "-") {
-    //     expression = inputDisplay.value;
-    //     const str = inputDisplay.value.replace(/(-.*?)(-)/, '$1+');
-    //     expressionParts = expression.split("-")
-    //     operator = "+";
-    //     inputDisplay.value = expressionParts[0] + operator + expressionParts[1];
-    else {
-        inputDisplay.value = inputDisplay.value;
-    }
-}
+});
 
-const positiveNegButton = document.querySelector(".positive-negative");
-
-positiveNegButton.addEventListener("click", () => handlePositiveNegClick());
+clearAll();
