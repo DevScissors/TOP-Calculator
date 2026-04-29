@@ -8,7 +8,98 @@ const positiveNegButton = document.querySelector('.positive-negative');
 const percentageButton = document.querySelector('.percentage');
 const equalsButton = document.querySelector('.operator-equals');
 
+const MAX_DIGITS = 12;
 let shouldResetInput = false;
+
+function getExpression() {
+    return inputDisplay.value || '';
+}
+
+function countDigits(value) {
+    return (value.match(/[0-9]/g) || []).length;
+}
+
+function roundString(value, maxDigits) {
+    const sign = value.startsWith('-') ? '-' : '';
+    const normalized = sign ? value.slice(1) : value;
+    if (normalized.includes('e')) return value;
+
+    const [integerPart, fractionPart = ''] = normalized.split('.');
+    const integerDigits = integerPart.replace(/^0+/, '').length || 1;
+    if (integerDigits >= maxDigits) {
+        const trimmed = integerPart.slice(0, maxDigits);
+        const nextDigit = integerPart.charAt(maxDigits);
+        if (nextDigit >= '5') {
+            let rounded = BigInt(trimmed) + 1n;
+            const roundedStr = rounded.toString();
+            return sign + roundedStr.slice(0, maxDigits);
+        }
+        return sign + trimmed;
+    }
+
+    const allowedFraction = maxDigits - integerPart.length;
+    if (fractionPart.length <= allowedFraction) {
+        return value;
+    }
+
+    const keepFraction = fractionPart.slice(0, allowedFraction);
+    const nextDigit = fractionPart.charAt(allowedFraction);
+    if (nextDigit >= '5') {
+        let combined = integerPart + keepFraction;
+        let carryIndex = combined.length - 1;
+        let rounded = combined.split('');
+        while (carryIndex >= 0) {
+            if (rounded[carryIndex] === '9') {
+                rounded[carryIndex] = '0';
+                carryIndex -= 1;
+                continue;
+            }
+            rounded[carryIndex] = String(Number(rounded[carryIndex]) + 1);
+            break;
+        }
+        if (carryIndex < 0) {
+            rounded.unshift('1');
+        }
+        const roundedStr = rounded.join('');
+        const integerLen = integerPart.length + (carryIndex < 0 ? 1 : 0);
+        const newInteger = roundedStr.slice(0, integerLen);
+        const newFraction = roundedStr.slice(integerLen);
+        return sign + (newFraction ? `${newInteger}.${newFraction}` : newInteger);
+    }
+
+    return sign + (allowedFraction ? `${integerPart}.${keepFraction}` : integerPart);
+}
+
+function trimTrailingZeros(value) {
+    let suffix = '';
+    if (value.endsWith('%')) {
+        suffix = '%';
+        value = value.slice(0, -1);
+    }
+    if (value.includes('e')) {
+        return value + suffix;
+    }
+    if (value.endsWith('.')) {
+        return value + suffix;
+    }
+    if (!value.includes('.')) {
+        return value + suffix;
+    }
+
+    const [integerPart, fractionPart] = value.split('.');
+    const trimmedFraction = fractionPart.replace(/0+$/, '');
+    if (!trimmedFraction) {
+        return integerPart + suffix;
+    }
+    return `${integerPart}.${trimmedFraction}${suffix}`;
+}
+
+function formatResult(value) {
+    value = trimTrailingZeros(value);
+    const digits = countDigits(value);
+    if (digits <= MAX_DIGITS) return value;
+    return trimTrailingZeros(roundString(value, MAX_DIGITS));
+}
 
 function updateDisplay(value) {
     inputDisplay.value = value;
@@ -16,8 +107,10 @@ function updateDisplay(value) {
     updateClearButton();
 }
 
-function getExpression() {
-    return inputDisplay.value || '';
+function displayFullResult(value) {
+    inputDisplay.value = formatResult(value);
+    inputDisplay.scrollLeft = inputDisplay.scrollWidth;
+    updateClearButton();
 }
 
 function parseExpression(expression) {
@@ -75,13 +168,15 @@ function calculate(first, operator, second) {
 }
 
 function appendDigit(digit) {
+    const expression = getExpression();
+    if (countDigits(expression) >= MAX_DIGITS) return;
+
     if (shouldResetInput) {
         updateDisplay(digit);
         shouldResetInput = false;
         return;
     }
 
-    const expression = getExpression();
     if (expression === '0') {
         updateDisplay(digit);
     } else {
@@ -147,7 +242,7 @@ function handleEquals() {
     if (result === null) return;
 
     expressionDisplay.textContent = expression;
-    updateDisplay(result);
+    displayFullResult(result);
     shouldResetInput = true;
 }
 
