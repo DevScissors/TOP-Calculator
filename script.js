@@ -15,7 +15,7 @@ let runningSum = '';
 let isPercentage = false;
 expressionDisplay.textContent = '';
 
-const regexOperators = /[+\-x\÷]/;
+const regexOperators = /[^-][+\-x\÷]/;
 
 
 function checkValues() {
@@ -25,11 +25,32 @@ function checkValues() {
     } else if (operator !== '' && runningSum === '') {
         const evaluationParts = inputDisplay.value.split(operator);
         firstNum = parseFloat(evaluationParts[0].trim());
-        secondNum = parseFloat(evaluationParts[1].replace('%', '').trim());
+        if (evaluationParts[1] === '') {
+            secondNum = '';
+        } else {
+            secondNum = parseFloat(evaluationParts[1].trim());
+        }
     } else if (runningSum !== '') {
-        const evaluationParts = inputDisplay.value.split(operator);
-        firstNum = parseFloat(evaluationParts[0].trim());
-        secondNum = parseFloat(evaluationParts[1].replace('%', '').trim());
+        if (runningSum < 0 && !regexOperators.test(inputDisplay.value)) {
+            inputDisplay.value = runningSum;
+        }
+        if (regexOperators.test(inputDisplay.value) && runningSum < 0 && operator === '-') {
+            const evaluationParts = inputDisplay.value.split(/^((?:[^-]*-){1}[^-]*)-/).slice(1);
+            firstNum = parseFloat(evaluationParts[0].trim());
+            if (evaluationParts[1] === '') {
+                secondNum = '';
+            } else {
+                secondNum = parseFloat(evaluationParts[1].replace('%', '').trim());
+            }
+        } else {
+            const evaluationParts = inputDisplay.value.split(/(?<!^)[+\-x÷]/);
+            firstNum = parseFloat(evaluationParts[0].trim());
+            if (evaluationParts[1] === '') {
+                secondNum = '';
+            } else {
+                secondNum = parseFloat(evaluationParts[1].replace('%', '').trim());
+            }
+        }
     } else {
         return inputDisplay.value;
     }
@@ -154,6 +175,7 @@ function operate(operator, firstNum, secondNum) {
 }
 
 function handleEqualsClick() {
+    checkValues();
     const evaluationParts = inputDisplay.value.split(operator);
     if (operator === '' && isPercentage) {
         inputDisplay.value = (parseFloat(firstNum) / 100).toString();
@@ -318,37 +340,30 @@ miscButtons.forEach((button) => {
 })
 
 function handlePositiveNegClick() {
-    if (runningSum < 0 && secondNum === '') {
-        runningSum = runningSum.toString().replace("-", "");
+    if (inputDisplay.value === '') {
+        return;
+    }
+    checkValues();
+    if (operator === '') {
+        firstNum = -firstNum;
+        inputDisplay.value = firstNum + (isPercentage ? '%' : '');
+    } else if (operator !== '' && secondNum === '') {
+        firstNum = -firstNum;
+        inputDisplay.value = firstNum + operator;
+    } else if (runningSum != '' && !regexOperators.test(inputDisplay.value)) {
+        runningSum = -runningSum;
         inputDisplay.value = runningSum;
-        expressionDisplay.textContent = '';
-    } else if (runningSum > 0 && secondNum === '') {
-        runningSum = `-${runningSum}`;
-        inputDisplay.value = runningSum;
-    } else if (firstNum !== '' && secondNum === '' && operator === '' && runningSum === '') {
-        expressionDisplay.textContent = '';
-        inputDisplay.value = `-${firstNum}`;
-    } else if (firstNum !== '' && secondNum === '' && operator !== '') {
-        expressionDisplay.textContent = '';
-        inputDisplay.value = `-${firstNum}${operator}`;
-    } else if (firstNum.charAt(0) === "-" && secondNum === '' && runningSum === '') {
-        expressionDisplay.textContent = '';
-        inputDisplay.value = firstNum;
-    } else if (firstNum.charAt(0) === "-" && secondNum !== '' && operator === "-") {
-        const expressionParts = inputDisplay.value.split(/^(-[^-]*)-/).filter((emptyStr) => emptyStr !== '');
-        secondNum = expressionParts[1];
-        operator = "+";
-        inputDisplay.value = `${firstNum}${operator}${secondNum}`;
-    } else if (secondNum !== '' && operator === "+") {
-        const expressionParts = inputDisplay.value.split(operator);
-        secondNum = expressionParts[1];
-        operator = "-";
-        inputDisplay.value = `${firstNum}${operator}${secondNum}`;
-    } else if (runningSum !== '' && inputDisplay.value.charAt(0) === "-") {
-        inputDisplay.value = `${inputDisplay.value}`;
-        expressionDisplay.textContent = '';
+    } else if (runningSum != '' && regexOperators.test(inputDisplay.value)) {
+        if (operator === '+' || operator === '-') {
+            operator = operator === '+' ? '-' : '+';
+            inputDisplay.value = runningSum + operator + secondNum + (isPercentage ? "%" : '');
+        } else {
+            secondNum = -secondNum;
+            inputDisplay.value = runningSum + operator + secondNum + (isPercentage ? "%" : '');
+        }
     } else {
-        inputDisplay.value = inputDisplay.value;
+        secondNum = -secondNum;
+        inputDisplay.value = firstNum + operator + secondNum + (isPercentage ? '%' : '');
     }
 }
 
