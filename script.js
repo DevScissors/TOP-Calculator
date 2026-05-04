@@ -17,6 +17,25 @@ expressionDisplay.textContent = '';
 
 const regexOperators = /[^-][+\-x\÷]/;
 
+function formatNumberForDisplay(num) {
+    let str = num.toString();
+    let decimals = 10;
+
+    // Check if the initial string exceeds the display width
+    while (str.length > 15 && decimals > 0) {
+        const rounded = parseFloat(num.toFixed(decimals));
+        str = rounded.toString();
+        decimals--;
+    }
+
+    // If still too long, use exponential notation
+    if (str.length > 15) {
+        str = num.toExponential(5);
+    }
+
+    return str;
+}
+
 
 function checkValues() {
     inputDisplay.scrollLeft = inputDisplay.scrollWidth;
@@ -31,10 +50,10 @@ function checkValues() {
             secondNum = parseFloat(evaluationParts[1].trim());
         }
     } else if (runningSum !== '') {
-        if (runningSum < 0 && !regexOperators.test(inputDisplay.value)) {
-            inputDisplay.value = runningSum;
+        if (!regexOperators.test(inputDisplay.value)) {
+            inputDisplay.value = formatNumberForDisplay(runningSum);
         }
-        if (regexOperators.test(inputDisplay.value) && runningSum < 0 && operator === '-') {
+        else if (regexOperators.test(inputDisplay.value) && runningSum < 0 && operator === '-') {
             const evaluationParts = inputDisplay.value.split(/^((?:[^-]*-){1}[^-]*)-/).slice(1);
             firstNum = parseFloat(evaluationParts[0].trim());
             if (evaluationParts[1] === '') {
@@ -77,15 +96,15 @@ function add(firstNum, secondNum) {
     if (runningSum === '' && firstNum !== '') {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}${isPercentage ? '%' : ''}`;
         runningSum = firstNum + actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     } else if (runningSum === '' && firstNum && secondNum !== '') {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}${isPercentage ? '%' : ''}`;
         runningSum = firstNum + actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     } else {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}${isPercentage ? '%' : ''}`;
         runningSum = runningSum + actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     }
 }
 
@@ -94,15 +113,15 @@ function subtract(firstNum, secondNum) {
     if (runningSum === '' && firstNum !== '') {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}${isPercentage ? '%' : ''}`;
         runningSum = firstNum - actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     } else if (runningSum === '' && firstNum && secondNum !== '') {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}${isPercentage ? '%' : ''}`;
         runningSum = firstNum - actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     } else {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}${isPercentage ? '%' : ''}`;
         runningSum = runningSum - actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     }
 }
 
@@ -111,15 +130,15 @@ function multiply(firstNum, secondNum) {
     if (firstNum === '' && secondNum !== '') {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}${isPercentage ? '%' : ''}`;
         runningSum = firstNum * actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     } else if (runningSum !== '' && secondNum !== '') {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}${isPercentage ? '%' : ''}`;
         runningSum = runningSum * actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     } else if (firstNum !== '' && secondNum !== '') {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}${isPercentage ? '%' : ''}`;
         runningSum = firstNum * actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     } else {
         return inputDisplay.value;
     }
@@ -135,7 +154,7 @@ function divide(firstNum, secondNum) {
     } else if (firstNum !== '' && secondNum !== '') {
         expressionDisplay.textContent = `${firstNum}${operator}${secondNum}`;
         runningSum = firstNum / actualSecond;
-        return inputDisplay.value = runningSum;
+        return inputDisplay.value = formatNumberForDisplay(runningSum);
     } else {
         return inputDisplay.value;
     }
@@ -143,7 +162,12 @@ function divide(firstNum, secondNum) {
 
 function percentage() {
     checkValues();
-    if (firstNum !== '' || (operator !== '' && secondNum !== '')) {
+    if (runningSum !== '' && operator === '') {
+        runningSum = parseFloat(firstNum) / 100;
+        firstNum = runningSum;
+        inputDisplay.value = formatNumberForDisplay(runningSum);
+        isPercentage = false;
+    } else if (firstNum !== '' || (operator !== '' && secondNum !== '')) {
         isPercentage = true;
         inputDisplay.value += "%";
     }
@@ -177,13 +201,16 @@ function operate(operator, firstNum, secondNum) {
 function handleEqualsClick() {
     checkValues();
     const evaluationParts = inputDisplay.value.split(operator);
-    if (operator === '' && isPercentage) {
-        inputDisplay.value = (parseFloat(firstNum) / 100).toString();
+    if ((runningSum !== '' && isPercentage) || operator === '' && isPercentage) {
+        expressionDisplay.textContent = `${firstNum}${isPercentage ? '%' : ''}`;
+        runningSum = parseFloat(firstNum) / 100;
+        firstNum = runningSum;
+        inputDisplay.value = formatNumberForDisplay(runningSum);
         isPercentage = false;
     } else if (operator === '') {
         inputDisplay.value = inputDisplay.value;
     } else if (operator !== '' && secondNum === '') {
-        inputDisplay.value = firstNum;
+        inputDisplay.value = formatNumberForDisplay(firstNum);
     } else if (regexOperators.test(inputDisplay.value) && evaluationParts[1] === '') {
         inputDisplay.value = inputDisplay.value;
     } else {
@@ -205,11 +232,11 @@ function handleOperatorClick(button) {
         if (isPercentage) {
             inputDisplay.value = inputDisplay.value + operator;
         } else {
-            inputDisplay.value = firstNum + operator;
+            inputDisplay.value = formatNumberForDisplay(firstNum) + operator;
         }
     } else if (runningSum !== '' && !regexOperators.test(inputDisplay.value)) {
         operator = button.value;
-        inputDisplay.value = runningSum + operator;
+        inputDisplay.value = formatNumberForDisplay(runningSum) + operator;
     } else if (regexOperators.test(inputDisplay.value) && evaluationParts[1] === '') {
         operator = button.value;
         inputDisplay.value = inputDisplay.value.slice(0, -1) + operator;
@@ -346,27 +373,84 @@ function handlePositiveNegClick() {
     checkValues();
     if (operator === '') {
         firstNum = -firstNum;
-        inputDisplay.value = firstNum + (isPercentage ? '%' : '');
+        inputDisplay.value = formatNumberForDisplay(firstNum) + (isPercentage ? '%' : '');
     } else if (operator !== '' && secondNum === '') {
         firstNum = -firstNum;
-        inputDisplay.value = firstNum + operator;
+        inputDisplay.value = formatNumberForDisplay(firstNum) + operator;
     } else if (runningSum != '' && !regexOperators.test(inputDisplay.value)) {
         runningSum = -runningSum;
-        inputDisplay.value = runningSum;
+        inputDisplay.value = formatNumberForDisplay(runningSum);
     } else if (runningSum != '' && regexOperators.test(inputDisplay.value)) {
         if (operator === '+' || operator === '-') {
             operator = operator === '+' ? '-' : '+';
-            inputDisplay.value = runningSum + operator + secondNum + (isPercentage ? "%" : '');
+            inputDisplay.value = formatNumberForDisplay(runningSum) + operator + secondNum + (isPercentage ? "%" : '');
         } else {
             secondNum = -secondNum;
-            inputDisplay.value = runningSum + operator + secondNum + (isPercentage ? "%" : '');
+            inputDisplay.value = formatNumberForDisplay(runningSum) + operator + secondNum + (isPercentage ? "%" : '');
         }
     } else {
         secondNum = -secondNum;
-        inputDisplay.value = firstNum + operator + secondNum + (isPercentage ? '%' : '');
+        inputDisplay.value = formatNumberForDisplay(firstNum) + operator + secondNum + (isPercentage ? '%' : '');
     }
 }
 
-
-
 positiveNegButton.addEventListener("click", () => handlePositiveNegClick());
+
+document.addEventListener('keydown', (event) => {
+    const key = event.key;
+    handleKeyboardInput(key, event);
+});
+
+function handleKeyboardInput(key, event) {
+    // Number keys 0-9
+    if (/^[0-9]$/.test(key)) {
+        handleNumberClick({ value: key });
+    }
+    // Operators
+    else if (key === '+') {
+        handleOperatorClick({ value: '+' });
+        event.preventDefault();
+    }
+    else if (key === '-' || key === '_') {
+        handleOperatorClick({ value: '-' });
+        event.preventDefault();
+    }
+    else if (key === '*') {
+        handleOperatorClick({ value: 'x' });
+        event.preventDefault();
+    }
+    else if (key === '/') {
+        handleOperatorClick({ value: '÷' });
+        event.preventDefault();
+    }
+    // Equals
+    else if (key === 'Enter' || key === '=') {
+        handleEqualsClick();
+        event.preventDefault();
+    }
+    // Backspace/Delete
+    else if (key === 'Backspace') {
+        deleteDigit();
+        event.preventDefault();
+    }
+    // Clear
+    else if (key === 'Escape' || key.toLowerCase() === 'c') {
+        clearDisplayAndNumberValues();
+        event.preventDefault();
+    }
+    // Decimal point
+    else if (key === '.') {
+        handleDecimalPointClick(decimalPointButton);
+        event.preventDefault();
+    }
+    // Percentage
+    else if (key === '%') {
+        percentage();
+        event.preventDefault();
+    }
+    // Toggle sign
+    else if (key === 'Alt') {
+        handlePositiveNegClick();
+        event.preventDefault();
+    }
+}
