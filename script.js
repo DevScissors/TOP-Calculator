@@ -15,7 +15,7 @@ let runningSum = '';
 let isPercentage = false;
 expressionDisplay.textContent = '';
 
-const regexOperators = /[^-][+\-x\÷]/;
+const regexOperators = /(?<=\d)[\+\-x\÷](?=-?\d)/;
 
 function formatNumberForDisplay(num) {
     let str = num.toString();
@@ -44,7 +44,7 @@ function checkValues() {
         return;
     }
     if (operator !== '' && runningSum === '' && operator === '-') {
-        const evaluationParts = inputDisplay.value.split(/(?<!^)[+\-x÷]/);
+        const evaluationParts = inputDisplay.value.split(regexOperators);
         firstNum = parseFloat(evaluationParts[0].trim());
         secondNum = evaluationParts[1] ? parseFloat(evaluationParts[1].trim()) : '';
         return;
@@ -66,7 +66,7 @@ function checkValues() {
         return;
     }
     if (runningSum !== '') {
-        const evaluationParts = inputDisplay.value.split(/(?<!^)[+\-x÷]/);
+        const evaluationParts = inputDisplay.value.split(regexOperators);
         firstNum = parseFloat(evaluationParts[0].trim());
         secondNum = evaluationParts[1] ? parseFloat(evaluationParts[1].replace('%', '').trim()) : '';
         return;
@@ -75,7 +75,7 @@ function checkValues() {
 }
 
 function handleNumberClick(button) {
-    if (runningSum !== '' && !regexOperators.test(inputDisplay.value)) {
+    if (runningSum !== '' && regexOperators.test(inputDisplay.value)) {
         clearDisplayAndNumberValues();
         inputDisplay.value += button.value;
     } else {
