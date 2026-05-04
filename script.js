@@ -75,7 +75,7 @@ function checkValues() {
 }
 
 function handleNumberClick(button) {
-    if (runningSum !== '' && regexOperators.test(inputDisplay.value)) {
+    if (/^-?\d+(\.\d+)?$/.test(inputDisplay.value) && runningSum !== '') {
         clearDisplayAndNumberValues();
         inputDisplay.value += button.value;
     } else {
