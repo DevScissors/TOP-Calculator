@@ -1,7 +1,22 @@
+.legend-wrapper {
+    width: 250px;
+    justify-self: center;
+    margin-top: 20%;
+    background-color: black;
+    padding: 5px;
+    margin-bottom: 50px;
+    border: 3px solid gray;
+    color: white;
+}
+
+.legend-title {
+    justify-self: center;
+    text-decoration: underline;
+}
+
 .calculator-wrapper {
     display: flex;
     justify-content: center;
-    margin-top: 20%;
 }
 
 .calculator-container {
