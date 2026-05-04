@@ -33,7 +33,7 @@
 }
 
 .results-input {
-    width: 270px;
+    width: 250px;
     border: none;
     color: white;
     background-color: black;
@@ -42,10 +42,7 @@
     overflow-x: auto;
     white-space: nowrap;
     outline: none;
-}
-
-input {
-    text-indent: 20px;
+    margin-left: 20px;
 }
 
 input::placeholder {
