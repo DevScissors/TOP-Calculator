@@ -86,6 +86,7 @@ function checkValues() {
 function handleNumberClick(button) {
     if (runningSum !== '' && !regexOperators.test(inputDisplay.value)) {
         clearDisplayAndNumberValues();
+        inputDisplay.value += button.value;
     } else {
         inputDisplay.value += button.value;
         checkValues();
@@ -389,6 +390,11 @@ function handlePositiveNegClick() {
     } else if (operator !== '' && secondNum === '') {
         firstNum = -firstNum;
         inputDisplay.value = formatNumberForDisplay(firstNum) + operator;
+    } else if (runningSum === '' && firstNum !== '' && secondNum !== '') {
+        if (operator === '+' || operator === '-') {
+            operator = operator === '+' ? '-' : '+';
+            inputDisplay.value = formatNumberForDisplay(firstNum) + operator + secondNum + (isPercentage ? "%" : '');
+        }
     } else if (runningSum != '' && !regexOperators.test(inputDisplay.value)) {
         runningSum = -runningSum;
         inputDisplay.value = formatNumberForDisplay(runningSum);
@@ -405,6 +411,7 @@ function handlePositiveNegClick() {
         inputDisplay.value = formatNumberForDisplay(firstNum) + operator + secondNum + (isPercentage ? '%' : '');
     }
 }
+
 
 positiveNegButton.addEventListener("click", () => handlePositiveNegClick());
 
