@@ -41,7 +41,15 @@ function checkValues() {
     inputDisplay.scrollLeft = inputDisplay.scrollWidth;
     if (operator === '' && runningSum === '' && secondNum == '') {
         firstNum = parseFloat(inputDisplay.value);
-    } else if (operator !== '' && runningSum === '') {
+    } else if (operator !== '' && runningSum === '' && operator === '-') {
+        const evaluationParts = inputDisplay.value.split(/(?<!^)[+\-x÷]/);
+        firstNum = parseFloat(evaluationParts[0].trim());
+        if (evaluationParts[1] === '') {
+            secondNum = '';
+        } else {
+            secondNum = parseFloat(evaluationParts[1].trim());
+        }
+    } else if (operator !== '' && runningSum === '' && operator !== '-') {
         const evaluationParts = inputDisplay.value.split(operator);
         firstNum = parseFloat(evaluationParts[0].trim());
         if (evaluationParts[1] === '') {
@@ -76,9 +84,13 @@ function checkValues() {
 }
 
 function handleNumberClick(button) {
-    inputDisplay.value += button.value;
-    checkValues();
-    clearButtonImageToggle();
+    if (runningSum !== '' && !regexOperators.test(inputDisplay.value)) {
+        clearDisplayAndNumberValues();
+    } else {
+        inputDisplay.value += button.value;
+        checkValues();
+        clearButtonImageToggle();
+    }
 }
 
 numberButtons.forEach((button) => {
