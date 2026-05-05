@@ -326,13 +326,36 @@ operatorButtons.forEach((button) => {
 
 function handleDecimalPointClick(decimalPointButton) {
     checkValues();
-    if (!Number.isInteger(firstNum) && secondNum === '') {
-        inputDisplay.value = firstNum;
-    } else if (secondNum !== '' && !Number.isInteger(secondNum)) {
-        inputDisplay.value = firstNum + operator + secondNum;
+    // Get the current number being entered
+    let currentNumber = operator === '' ? inputDisplay.value : inputDisplay.value.split(operator)[1];
+    if (runningSum === '' && currentNumber && currentNumber.includes('.')) {
+        return;
+    } else if (runningSum !== '' && !regexOperators.test(inputDisplay.value)) {
+        currentNumber = runningSum.toString();
+        if (currentNumber && currentNumber.includes('.')) {
+            return;
+        }
     } else {
-        inputDisplay.value += decimalPointButton.value;
+        if (currentNumber.includes('.')) {
+            return;
+        } else {
+            inputDisplay.value += decimalPointButton.value;
+        }
     }
+    // Check if current number already has a decimal point and runningSum isn't calculated yet
+    // if (runningSum !== '' && currentNumber && currentNumber.includes('.')) {
+    //     return; // Don't add another decimal point
+    // } else {
+    //     inputDisplay.value += decimalPointButton.value;
+    // }
+
+    // if (!Number.isInteger(firstNum) && secondNum === '') {
+    //     inputDisplay.value = firstNum;
+    // } else if (secondNum !== '' && !Number.isInteger(secondNum)) {
+    //     inputDisplay.value = firstNum + operator + secondNum;
+    // } else {
+    //     inputDisplay.value += decimalPointButton.value;
+    // }
 }
 
 
